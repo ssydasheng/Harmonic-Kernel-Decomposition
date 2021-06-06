@@ -12,7 +12,7 @@ import numpy as np
 import tensorflow as tf
 from gpflow.features import Kuu, Kuf
 
-from core.svgp.reflection import ReflectionFeatures, ReflectionPCAFeatures
+from core.svgp.reflection import ReflectionFeatures
 from utils.data import get_regression_data
 
 
@@ -49,7 +49,6 @@ def main():
     parser.add_argument("--feature", default='ref2', type=str)
     parser.add_argument("--J", default=2, type=int)
     parser.add_argument("--m", type=int, default=2)
-    parser.add_argument("--database_path", default='', type=str)
     args = parser.parse_args()
     np.random.seed(1234)
 
@@ -66,11 +65,12 @@ def main():
         if args.feature == 'svgp':
             feat = gpflow.features.InducingPoints(Z)
         elif args.feature == 'ref2':
-            feat = ReflectionFeatures([Z] * args.J, name='feature')
+            U = np.eye(Z.shape[-1]).astype('float64')
+            feat = ReflectionFeatures([Z] * args.J, U, name='feature')
         elif args.feature == 'ref2pca':
             Sigma = np.cov(X, rowvar=False)
             Lambda, U = np.linalg.eigh(Sigma)
-            feat = ReflectionPCAFeatures([Z] * args.J, U, name='feature')
+            feat = ReflectionFeatures([Z] * args.J, U, name='feature')
         else:
             raise NotImplementedError
 
